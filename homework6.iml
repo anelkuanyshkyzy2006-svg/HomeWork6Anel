@@ -1,0 +1,114 @@
+import java.util.*;
+
+
+interface PaymentStrategy {
+    void pay(double amount);
+}
+
+class CreditCardPayment implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.println("Карта арқылы төлем: " + amount + " тг");
+    }
+}
+
+class PayPalPayment implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.println("PayPal арқылы төлем: " + amount + " тг");
+    }
+}
+
+class CryptoPayment implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.println("Криптовалюта арқылы төлем: " + amount + " тг");
+    }
+}
+
+class PaymentContext {
+    private PaymentStrategy strategy;
+    public void setPaymentStrategy(PaymentStrategy strategy) { this.strategy = strategy; }
+    public void payAmount(double amount) {
+        if(strategy != null) strategy.pay(amount);
+        else System.out.println("Стратегия таңдалмаған!");
+    }
+}
+
+
+interface Observer {
+    void update(double usd, double eur);
+}
+
+interface Subject {
+    void registerObserver(Observer o);
+    void removeObserver(Observer o);
+    void notifyObservers();
+}
+
+class CurrencyExchange implements Subject {
+    private List<Observer> observers = new ArrayList<>();
+    private double usdRate;
+    private double eurRate;
+
+    public void setRates(double usd, double eur) {
+        this.usdRate = usd;
+        this.eurRate = eur;
+        notifyObservers();
+    }
+
+    public void registerObserver(Observer o) { observers.add(o); }
+    public void removeObserver(Observer o) { observers.remove(o); }
+    public void notifyObservers() {
+        for(Observer o : observers) o.update(usdRate, eurRate);
+    }
+}
+
+class Investor implements Observer {
+    public void update(double usd, double eur) {
+        System.out.println("Инвестор: USD=" + usd + ", EUR=" + eur);
+    }
+}
+
+class Shop implements Observer {
+    public void update(double usd, double eur) {
+        System.out.println("Магазин: USD=" + usd + ", EUR=" + eur);
+    }
+}
+
+class NewsAgency implements Observer {
+    public void update(double usd, double eur) {
+        System.out.println("Жаңалықтар: USD=" + usd + ", EUR=" + eur);
+    }
+}
+
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        PaymentContext payment = new PaymentContext();
+        CurrencyExchange exchange = new CurrencyExchange();
+
+        Investor investor = new Investor();
+        Shop shop = new Shop();
+        NewsAgency news = new NewsAgency();
+
+        exchange.registerObserver(investor);
+        exchange.registerObserver(shop);
+        exchange.registerObserver(news);
+
+        System.out.println("1 - Стратегия оплаты, 2 - Курсы валют");
+        String choice = sc.nextLine();
+
+        if(choice.equals("1")) {
+            System.out.println("Выберите способ оплаты: 1-Карта, 2-PayPal, 3-Криптовалюта");
+            String c = sc.nextLine();
+            if(c.equals("1")) payment.setPaymentStrategy(new CreditCardPayment());
+            else if(c.equals("2")) payment.setPaymentStrategy(new PayPalPayment());
+            else if(c.equals("3")) payment.setPaymentStrategy(new CryptoPayment());
+            payment.payAmount(1000);
+        } else if(choice.equals("2")) {
+            exchange.setRates(500, 550);
+            exchange.setRates(510, 545);
+        }
+
+        sc.close();
+    }
+}
